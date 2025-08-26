@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="NeonEmerald">#00FF9F</color>
+    <color name="CyberLime">#39FF14</color>
+    <color name="PlasmaGreen">#32FF6A</color>
+    <color name="LaserMint">#3FFFBF</color>
+
+    <color name="my_light_primary">#00FF9F</color>
+    <color name="my_Light_secondary">#32FF6A</color>
+
+</resources>
