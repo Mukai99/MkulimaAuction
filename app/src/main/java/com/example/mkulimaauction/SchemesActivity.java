@@ -1,6 +1,5 @@
 package com.example.mkulimaauction;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -10,69 +9,52 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.mkulimaauction.Adapter.CropAdapter;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.mkulimaauction.Adapter.SchemeAdapter;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CropsActivity extends AppCompatActivity {
+public class SchemesActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private CropAdapter adapter;
-    private List<Crop> cropList;
+    private SchemeAdapter adapter;
+    private List<Scheme> schemeList;
     private FirebaseFirestore db;
-    private FloatingActionButton addCropFab;
     private TextView emptyView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_crops); // ✅ FIXED
+        setContentView(R.layout.activity_schemes);
 
-        recyclerView = findViewById(R.id.recyclerViewCrops);
-        addCropFab = findViewById(R.id.addCropFab);
-        emptyView = findViewById(R.id.emptyView);
+        recyclerView = findViewById(R.id.recyclerViewSchemes);
+        emptyView = findViewById(R.id.emptyViewSchemes);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        cropList = new ArrayList<>();
-        adapter = new CropAdapter(this, cropList);
+        schemeList = new ArrayList<>();
+        adapter = new SchemeAdapter(this, schemeList);
         recyclerView.setAdapter(adapter);
 
         db = FirebaseFirestore.getInstance();
 
-        loadCrops();
-
-        addCropFab.setOnClickListener(v -> {
-            startActivity(new Intent(CropsActivity.this, UploadCropActivity.class));
-        });
+        loadSchemes();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
-        }
-    }
-
-    private void loadCrops() {
-        db.collection("crops").get()
+    private void loadSchemes() {
+        db.collection("schemes").get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    cropList.clear();
+                    schemeList.clear();
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                        Crop crop = doc.toObject(Crop.class);
-                        if (crop != null) {
-                            cropList.add(crop);
+                        Scheme scheme = doc.toObject(Scheme.class);
+                        if (scheme != null) {
+                            schemeList.add(scheme);
                         }
                     }
                     adapter.notifyDataSetChanged();
 
-                    if (cropList.isEmpty()) {
+                    if (schemeList.isEmpty()) {
                         emptyView.setVisibility(View.VISIBLE);
                         recyclerView.setVisibility(View.GONE);
                     } else {
