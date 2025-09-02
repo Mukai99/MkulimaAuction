@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "500350627992",
+    "project_id": "mkulimaauctions",
+    "storage_bucket": "mkulimaauctions.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500350627992:android:c6af30d8adba04047120ed",
+        "android_client_info": {
+          "package_name": "com.example.mkulimaauction"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQX8g3Y3vtFlWjGVitHZQmFOhmu_Pmwg0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
