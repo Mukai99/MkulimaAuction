@@ -18,23 +18,4 @@
         android:id="@+id/recyclerViewSchemes"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-
-    <TextView
-        android:id="@+id/schemeTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scheme Title"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"/>
-
-    <TextView
-        android:id="@+id/schemeDescription"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scheme description goes here..."
-        android:textSize="14sp"
-        android:layout_marginTop="4dp"
-        android:textColor="@android:color/darker_gray"/>
-
 </LinearLayout>

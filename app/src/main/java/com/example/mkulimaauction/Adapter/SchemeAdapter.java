@@ -27,7 +27,7 @@ public class SchemeAdapter extends RecyclerView.Adapter<SchemeAdapter.SchemeView
     @NonNull
     @Override
     public SchemeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_crop, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_scheme, parent, false);
         return new SchemeViewHolder(view);
     }
 

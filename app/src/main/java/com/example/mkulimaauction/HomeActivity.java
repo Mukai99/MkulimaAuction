@@ -11,12 +11,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class HomeActivity extends AppCompatActivity {
 
     private TextView welcomeText;
     private FirebaseAuth auth;
     private MaterialButton viewCropsButton, viewSchemesButton;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +27,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
         FirebaseUser user = auth.getCurrentUser();
 
         welcomeText = findViewById(R.id.welcomeText);
@@ -31,8 +35,24 @@ public class HomeActivity extends AppCompatActivity {
         viewSchemesButton = findViewById(R.id.viewSchemesButton);
 
         if (user != null) {
-            String email = user.getEmail();
-            welcomeText.setText("Welcome, " + email + "!");
+            // Fetch user name from Firestore instead of showing email
+            String userId = user.getUid();
+            DocumentReference docRef = db.collection("users").document(userId);
+            docRef.get().addOnSuccessListener(document -> {
+                if (document.exists()) {
+                    String name = document.getString("name");
+                    if (name != null && !name.isEmpty()) {
+                        welcomeText.setText("Welcome, " + name + "!");
+                    } else {
+                        // fallback to email if no name found
+                        welcomeText.setText("Welcome, " + user.getEmail() + "!");
+                    }
+                } else {
+                    welcomeText.setText("Welcome, " + user.getEmail() + "!");
+                }
+            }).addOnFailureListener(e -> {
+                welcomeText.setText("Welcome, " + user.getEmail() + "!");
+            });
         } else {
             startActivity(new Intent(HomeActivity.this, MainActivity.class));
             finish();
@@ -49,7 +69,7 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    // Optional: If you still want a logout menu in the top-right corner
+    // Optional: Logout menu
     @Override
     public boolean onCreateOptionsMenu(android.view.Menu menu) {
         getMenuInflater().inflate(R.menu.home_menu, menu);
