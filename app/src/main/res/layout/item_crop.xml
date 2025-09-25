@@ -53,7 +53,27 @@
                 android:text="Price: Ksh 1000"
                 android:textStyle="bold"
                 android:textSize="14sp"
-                android:textColor="@android:color/holo_green_dark" />
+                android:textColor="@android:color/holo_green_dark"
+                android:layout_marginTop="4dp" />
+
+            <!-- New: Highest Bid -->
+            <TextView
+                android:id="@+id/cropHighestBidText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Highest Bid: Ksh 0"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@android:color/holo_orange_dark"
+                android:layout_marginTop="4dp" />
+
+            <!-- New: Bid Button -->
+            <Button
+                android:id="@+id/bidButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bid"
+                android:layout_marginTop="6dp" />
 
         </LinearLayout>
     </LinearLayout>

@@ -67,6 +67,7 @@ public class CropsActivity extends AppCompatActivity {
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         Crop crop = doc.toObject(Crop.class);
                         if (crop != null) {
+                            crop.setId(doc.getId()); // 🔑 Save Firestore document ID
                             cropList.add(crop);
                         }
                     }
@@ -81,4 +82,5 @@ public class CropsActivity extends AppCompatActivity {
                     }
                 });
     }
+
 }

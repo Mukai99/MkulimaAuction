@@ -1,89 +1,82 @@
 package com.example.mkulimaauction;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class UploadCropActivity extends AppCompatActivity {
 
-    private static final int PICK_IMAGE_REQUEST = 22;
-
-    private ImageView cropImageView;
-    private MaterialButton selectImageButton, uploadCropButton;
     private TextInputEditText cropNameEditText, cropDescriptionEditText, cropPriceEditText;
+    private MaterialButton selectImageButton, uploadCropButton;
+    private ImageView cropImageView;
 
-    private Uri filePath;
     private FirebaseFirestore db;
-    private StorageReference storageRef;
     private ProgressDialog progressDialog;
+
+    // Store selected drawable resource ID and key
+    private int selectedImageRes = -1;
+    private String selectedImageKey = null;
+
+    // Crop names and images
+    private final String[] crops = {"Maize", "Beans", "Wheat", "Broccoli", "Carrot", "Cow", "Apples", "Peas", "Nuts"};
+    private final int[] cropImages = {
+            R.drawable.maize,
+            R.drawable.beans,
+            R.drawable.wheat,
+            R.drawable.brocoli,
+            R.drawable.carrot,
+            R.drawable.cow,
+            R.drawable.apples,
+            R.drawable.peas,
+            R.drawable.rednuts
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload_crop);
 
-        // Initialize Firebase
+        // Initialize Firestore
         db = FirebaseFirestore.getInstance();
-        storageRef = FirebaseStorage.getInstance().getReference();
 
         // Bind Views
-        cropImageView = findViewById(R.id.cropImageView);
-        selectImageButton = findViewById(R.id.selectImageButton);
-        uploadCropButton = findViewById(R.id.uploadCropButton);
         cropNameEditText = findViewById(R.id.cropNameEditText);
         cropDescriptionEditText = findViewById(R.id.cropDescriptionEditText);
         cropPriceEditText = findViewById(R.id.cropPriceEditText);
+        cropImageView = findViewById(R.id.cropImageView);
+        selectImageButton = findViewById(R.id.selectImageButton);
+        uploadCropButton = findViewById(R.id.uploadCropButton);
 
         progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Uploading...");
+        progressDialog.setMessage("Saving...");
 
-        // Select Image
-        selectImageButton.setOnClickListener(v -> selectImage());
+        // Pick from preset images
+        selectImageButton.setOnClickListener(v -> selectPresetImage());
 
-        // Upload Crop
+        // Save crop
         uploadCropButton.setOnClickListener(v -> uploadCrop());
     }
 
-    private void selectImage() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Crop Image"), PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            filePath = data.getData();
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
-                cropImageView.setImageBitmap(bitmap);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    private void selectPresetImage() {
+        new AlertDialog.Builder(this)
+                .setTitle("Select Crop Image")
+                .setItems(crops, (dialog, which) -> {
+                    cropImageView.setImageResource(cropImages[which]); // preview image
+                    selectedImageRes = cropImages[which];              // save resource ID
+                    selectedImageKey = crops[which];                   // save name (e.g. "Maize")
+                })
+                .show();
     }
 
     private void uploadCrop() {
@@ -91,41 +84,42 @@ public class UploadCropActivity extends AppCompatActivity {
         String description = cropDescriptionEditText.getText().toString().trim();
         String price = cropPriceEditText.getText().toString().trim();
 
-        if (filePath == null || name.isEmpty() || price.isEmpty()) {
+        if (name.isEmpty() || price.isEmpty() || selectedImageKey == null) {
             Toast.makeText(this, "Please fill all fields and select an image", Toast.LENGTH_SHORT).show();
             return;
         }
 
         progressDialog.show();
 
-        // Create unique image name
-        String imageName = "crops/" + UUID.randomUUID().toString();
+        long now = System.currentTimeMillis();
+        long oneHourLater = now + (60 * 60 * 1000); // 1 hour auction
 
-        StorageReference ref = storageRef.child(imageName);
-        ref.putFile(filePath)
-                .addOnSuccessListener(taskSnapshot -> ref.getDownloadUrl().addOnSuccessListener(uri -> {
-                    // Save crop info to Firestore
-                    Map<String, Object> crop = new HashMap<>();
-                    crop.put("name", name);
-                    crop.put("description", description);
-                    crop.put("price", Double.parseDouble(price));
-                    crop.put("imageUrl", uri.toString());
+        // Save to Firestore
+        Map<String, Object> crop = new HashMap<>();
+        crop.put("cropName", name);                      // ✅ match Crop.java
+        crop.put("description", description);
+        crop.put("basePrice", Double.parseDouble(price));
+        crop.put("imageKey", selectedImageKey);
 
-                    db.collection("crops").add(crop)
-                            .addOnSuccessListener(documentReference -> {
-                                progressDialog.dismiss();
-                                Toast.makeText(UploadCropActivity.this, "Crop uploaded!", Toast.LENGTH_SHORT).show();
-                                finish(); // Close activity
-                            })
-                            .addOnFailureListener(e -> {
-                                progressDialog.dismiss();
-                                Toast.makeText(UploadCropActivity.this, "Failed to upload crop", Toast.LENGTH_SHORT).show();
-                            });
+        // --- Auction-related fields (match Crop.java exactly) ---
+        crop.put("highestBid", Double.parseDouble(price)); // start with base price
+        crop.put("highestBidderId", "");                   // none yet
+        crop.put("auctionEndTime", oneHourLater);          // correct name
 
-                }))
+        String cropId = name + "_" + System.currentTimeMillis();
+        crop.put("id", cropId);
+        db.collection("crops").document(name).set(crop)
+                .addOnSuccessListener(documentReference -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(UploadCropActivity.this, "Crop saved!", Toast.LENGTH_SHORT).show();
+                    finish();
+                })
                 .addOnFailureListener(e -> {
                     progressDialog.dismiss();
-                    Toast.makeText(UploadCropActivity.this, "Image Upload Failed!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UploadCropActivity.this, "Failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
                 });
     }
+
+
 }
